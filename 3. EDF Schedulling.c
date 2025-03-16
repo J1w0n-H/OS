@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <limits.h> // Include limits.h for INT_MAX
 
 // Structure to represent a task
 typedef struct {
@@ -24,7 +25,7 @@ bool check_schedulability_utilization(Task* tasks, int n) {
     float utilization = 0.0;
     
     for (int i = 0; i < n; i++) {
-        utilization += (float)tasks[i].execution / (float)tasks[i].deadline;
+        utilization += (float)tasks[i].execution / (float)tasks[i].period;
     }
     
     printf("Total utilization: %.2f\n", utilization);
@@ -35,7 +36,7 @@ bool check_schedulability_utilization(Task* tasks, int n) {
 // Function to find the job with the earliest deadline
 int find_earliest_deadline(Job* jobs, int n) {
     int earliest = -1;
-    int min_deadline = __INT_MAX__;
+    int min_deadline = INT_MAX; // Use INT_MAX from limits.h
     
     for (int i = 0; i < n; i++) {
         if (!jobs[i].completed && jobs[i].execution > 0 && jobs[i].abs_deadline < min_deadline) {
@@ -72,10 +73,19 @@ bool construct_edf_schedule(Task* tasks, int n, int simulation_time) {
     
     // Array to store all job instances
     Job* jobs = (Job*)malloc(max_jobs * sizeof(Job));
+    if (jobs == NULL) {
+        perror("Failed to allocate memory for jobs");
+        return false;
+    }
     int n_jobs = 0;
     
     // Array to track which task is running at each time unit
     int* schedule = (int*)malloc(simulation_time * sizeof(int));
+    if (schedule == NULL) {
+        perror("Failed to allocate memory for schedule");
+        free(jobs);
+        return false;
+    }
     for (int i = 0; i < simulation_time; i++) {
         schedule[i] = -1; // -1 means idle
     }
